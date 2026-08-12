@@ -64,6 +64,12 @@ func readMinReward(ctx *maa.Context) (float64, error) {
 	return parseRewardFloat(exps[0])
 }
 
+// 英文缩写单位换算成「万」的比例：1K = 1,000 = 0.1万；1M = 1,000,000 = 100万。
+const (
+	kToWanDivisor    = 10
+	mToWanMultiplier = 100
+)
+
 // parseRewardFloat 解析价格文本为 float（单位统一为「万」）。
 // 支持「万」/「萬」单位（如 "16.3万"），也支持英文缩写 K/M（如 "119K"、"1.2M"，
 // 繁体等部分地区客户端用此格式显示报酬）；无单位时假定已是万单位。
@@ -80,14 +86,14 @@ func parseRewardFloat(s string) (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		return v / 10, nil // 1K = 1000 = 0.1万
+		return v / kToWanDivisor, nil
 	}
 	if num, ok := cutSuffixFold(s, "M"); ok {
 		v, err := strconv.ParseFloat(num, 64)
 		if err != nil {
 			return 0, err
 		}
-		return v * 100, nil // 1M = 1000000 = 100万
+		return v * mToWanMultiplier, nil
 	}
 	return strconv.ParseFloat(s, 64)
 }

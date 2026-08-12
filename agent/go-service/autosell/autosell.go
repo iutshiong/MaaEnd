@@ -197,16 +197,55 @@ func firstContainedKeyword(s string, subs []string) string {
 	return ""
 }
 
+// flattenKeywordGroups 把「同一物资的不同措辞变体」分组列表展开成扁平的关键词清单，
+// 提供给 firstContainedKeyword 做 strings.Contains 匹配。
+func flattenKeywordGroups(groups [][]string) []string {
+	var out []string
+	for _, g := range groups {
+		out = append(out, g...)
+	}
+	return out
+}
+
+// 每一组是同一件物资的所有已知措辞（简体 / 繁体 / 混写形），已逐一对照繁体客户端
+// 实际物资全名核实（23 种彈性需求物资全覆盖，2026-08）。多数是简繁转字，
+// 但也有部分繁体客户端用完全不同的词，不是简繁转换函式能推算出来的，见各组注释。
 var (
-	// 关键词只写了简体，繁体客户端物资名不会被 strings.Contains 命中，
-	// 因此补充繁体对应词；已逐一对照繁体客户端实际物资全名核实（23 种彈性需求物资全覆盖，2026-08）。
-	// "锚點" 是游戏繁体客户端实际出现的混写形（简体"锚"+繁体"點"），t2s/s2t 整词转换都对不上，只能整词照抄。
-	// "岳研避瘴茶货组"繁体客户端仍写"岳研"，未简化为"嶽研"，故不加"嶽研"。
-	moderatePriceKeywords = []string{"锚点", "錨點", "锚點", "悬空", "懸空", "巫术", "巫術", "天使", "岳研", "冬虫", "冬蟲", "武陵", "武侠", "武俠"}
-	largePriceKeywords    = []string{"谷地水", "团结", "團結", "塞什", "星体", "星體", "天师", "天師", "息壤净", "息壤淨", "息壤色", "息壤桥", "息壤橋", "清波", "飞天", "飛天", "选剑", "選劍"}
-	// "硬頭殼"是"硬脑壳/硬脑"的繁体地区叫法（用词差异，非简繁转换）；
-	// "碎料"是"边角料"的繁体地区叫法（用词差异，非简繁转换）。
-	massivePriceKeywords = []string{"源石", "警戒", "硬脑", "硬腦", "硬頭殼", "边角", "邊角", "碎料"}
+	moderatePriceKeywordGroups = [][]string{
+		{"锚点", "錨點", "锚點"}, // "锚點" 是繁体客户端实际出现的混写形（简体"锚"+繁体"點"），t2s/s2t 整词转换都对不上
+		{"悬空", "懸空"},
+		{"巫术", "巫術"},
+		{"天使"},
+		{"岳研"}, // 繁体客户端仍写"岳研"，未简化为"嶽研"，故不加"嶽研"
+		{"冬虫", "冬蟲"},
+		{"武陵"},
+		{"武侠", "武俠"},
+	}
+	largePriceKeywordGroups = [][]string{
+		{"谷地水"},
+		{"团结", "團結"},
+		{"塞什"},
+		{"星体", "星體"},
+		{"天师", "天師"},
+		{"息壤净", "息壤淨"},
+		{"息壤色"},
+		{"息壤桥", "息壤橋"},
+		{"清波"},
+		{"飞天", "飛天"},
+		{"选剑", "選劍"},
+	}
+	massivePriceKeywordGroups = [][]string{
+		{"源石"},
+		{"警戒"},
+		{"硬脑", "硬腦", "硬頭殼"}, // "硬頭殼"是繁体地区叫法（用词差异，非简繁转换）
+		{"边角", "邊角", "碎料"},  // "碎料"是繁体地区叫法（用词差异，非简繁转换）
+	}
+)
+
+var (
+	moderatePriceKeywords = flattenKeywordGroups(moderatePriceKeywordGroups)
+	largePriceKeywords    = flattenKeywordGroups(largePriceKeywordGroups)
+	massivePriceKeywords  = flattenKeywordGroups(massivePriceKeywordGroups)
 )
 
 // Compile-time interface checks
